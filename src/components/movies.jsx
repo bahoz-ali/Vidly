@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { deleteMovie, getMovies, setMovie } from "../services/fakeMovieService";
 import PopUp from "./popUp";
 import { container } from "./styles";
+import Like from "./like";
 
 class Movies extends Component {
   state = {
@@ -40,10 +41,19 @@ class Movies extends Component {
       numberInStock: Math.floor(Math.random() * 10 + 1),
       dailyRentalRate: Math.floor(Math.random() * 10 + 1),
       publishDate: Date(),
+      liked: false,
     };
 
     setMovie(movie);
     this.setState({ movies: getMovies() });
+  };
+
+  handleLike = (movie) => {
+    const movies = [...this.state.movies];
+    const index = movies.indexOf(movie);
+    movies[index] = { ...movies[index] };
+    movies[index].liked = !movies[index].liked;
+    this.setState({ movies: movies });
   };
 
   render() {
@@ -84,6 +94,7 @@ class Movies extends Component {
               <th>Stock</th>
               <th>Rate</th>
               <th></th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -93,6 +104,14 @@ class Movies extends Component {
                 <td>{movie.genre.name}</td>
                 <td>{movie.numberInStock}</td>
                 <td>{movie.dailyRentalRate}</td>
+                <td>
+                  <Like
+                    onClick={() => {
+                      this.handleLike(movie);
+                    }}
+                    liked={movie.liked}
+                  ></Like>
+                </td>
                 <td>
                   <button
                     onClick={() => this.handleDelete(movie)}
