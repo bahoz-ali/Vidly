@@ -2,11 +2,12 @@ import React, { Component } from "react";
 import { deleteMovie, getMovies, setMovie } from "../services/fakeMovieService";
 import PopUp from "./popUp";
 import { container } from "./styles";
-import Like from "./common/like";
 import Pagination from "./common/pagination";
 import { paginate } from "../utils/paginate";
 import ListGroup from "./listGroup";
 import { getGenres } from "../services/fakeGenreService";
+import MoviesTable from "./moviesTable";
+import NewMovie from "./common/newMovie";
 
 class Movies extends Component {
   state = {
@@ -17,7 +18,9 @@ class Movies extends Component {
   };
 
   componentDidMount() {
-    this.setState({ movies: getMovies(), genres: getGenres() });
+    const genres = [{ name: "All Genres" }, ...getGenres()];
+
+    this.setState({ movies: getMovies(), genres: genres });
   }
 
   handleDelete = (movie) => {
@@ -27,11 +30,12 @@ class Movies extends Component {
 
   randomId = () => {
     const uint32 = window.crypto.getRandomValues(new Uint32Array(1))[0];
-    console.log(uint32.toString(16));
     return uint32.toString(16);
   };
+
   addMovie = () => {
-    const genreList = ["horror", "action", "drama", "comedy", "crime"];
+    const genreList = [...this.state.genres];
+
     const movieList = [
       "It Happened One Night(1934)",
       "Modern Times(1936)",
@@ -42,12 +46,15 @@ class Movies extends Component {
       "Avengers: Endgame(2019)",
       "Casablanca(1942)",
     ];
+
+    const randomGenre = genreList[Math.floor(Math.random() * genreList.length)];
+
     const movie = {
       _id: this.randomId(),
-      title: movieList[Math.floor(Math.random() * genreList.length)],
+      title: movieList[Math.floor(Math.random() * movieList.length)],
       genre: {
-        _id: "passwordHard",
-        name: genreList[Math.floor(Math.random() * genreList.length)],
+        _id: randomGenre._id,
+        name: randomGenre.name,
       },
       numberInStock: Math.floor(Math.random() * 10 + 1),
       dailyRentalRate: Math.floor(Math.random() * 10 + 1),
@@ -72,12 +79,17 @@ class Movies extends Component {
   };
 
   handleGenreSelect = (genre) => {
-    console.log("genre", genre);
+    this.setState({ selectedGenre: genre, currentPage: 1 });
   };
 
   render() {
     const count = this.state.movies.length;
-    const { pageSize, currentPage, movies: allMovies } = this.state;
+    const {
+      pageSize,
+      currentPage,
+      movies: allMovies,
+      selectedGenre,
+    } = this.state;
 
     if (count === 0) {
       return (
@@ -94,67 +106,31 @@ class Movies extends Component {
         </div>
       );
     }
-    const movies = paginate(allMovies, currentPage, pageSize);
+    const filtered =
+      selectedGenre && selectedGenre._id
+        ? allMovies.filter((m) => m.genre._id === selectedGenre._id)
+        : allMovies;
+    const movies = paginate(filtered, currentPage, pageSize);
 
     return (
       <div className="row">
-        <div className="col-3">
+        <div className="col-3 mt-5">
           <ListGroup
             items={this.state.genres}
+            selectedItem={this.state.selectedGenre}
             onItemSelect={this.handleGenreSelect}
           />
         </div>
         <div className="col">
-          <br />
-          <div className="d-flex justify-content-between w-75 bg-warning p-2 rounded">
-            <h3 className="text-dark ">There are {count} movies</h3>
-            <button onClick={this.addMovie} className="btn btn-success ">
-              Add Movie
-            </button>
-          </div>
-
-          <br />
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Genre</th>
-                <th>Stock</th>
-                <th>Rate</th>
-                <th></th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {movies.map((movie) => (
-                <tr key={movie._id}>
-                  <td>{movie.title}</td>
-                  <td>{movie.genre.name}</td>
-                  <td>{movie.numberInStock}</td>
-                  <td>{movie.dailyRentalRate}</td>
-                  <td>
-                    <Like
-                      onClick={() => {
-                        this.handleLike(movie);
-                      }}
-                      liked={movie.liked}
-                    ></Like>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => this.handleDelete(movie)}
-                      className="btn btn-danger"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <NewMovie count={filtered.length} onAddMovie={this.addMovie} />
+          <MoviesTable
+            movies={movies}
+            onDelete={this.handleDelete}
+            onLike={this.handleLike}
+          />
           <PopUp />
           <Pagination
-            itemCount={count}
+            itemCount={filtered.length}
             pageSize={pageSize}
             currentPage={currentPage}
             onPageChange={this.handleChangePage}
@@ -164,6 +140,5 @@ class Movies extends Component {
     );
   }
 }
-
 
 export default Movies;

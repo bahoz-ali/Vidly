@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import Movies from "./components/movies";
 
 function App() {

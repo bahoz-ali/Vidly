@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { formS, overlay, container } from "./styles";
+import { formS, container } from "./styles";
 
 function PopUp() {
   const handleModal = () => {
