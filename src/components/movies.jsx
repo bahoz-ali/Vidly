@@ -2,12 +2,23 @@ import React, { Component } from "react";
 import { deleteMovie, getMovies, setMovie } from "../services/fakeMovieService";
 import PopUp from "./popUp";
 import { container } from "./styles";
-import Like from "./like";
+import Like from "./common/like";
+import Pagination from "./common/pagination";
+import { paginate } from "../utils/paginate";
+import ListGroup from "./listGroup";
+import { getGenres } from "../services/fakeGenreService";
 
 class Movies extends Component {
   state = {
-    movies: getMovies(),
+    movies: [],
+    pageSize: 4,
+    currentPage: 1,
+    genres: [],
   };
+
+  componentDidMount() {
+    this.setState({ movies: getMovies(), genres: getGenres() });
+  }
 
   handleDelete = (movie) => {
     deleteMovie(movie._id);
@@ -51,13 +62,22 @@ class Movies extends Component {
   handleLike = (movie) => {
     const movies = [...this.state.movies];
     const index = movies.indexOf(movie);
-    movies[index] = { ...movies[index] };
+    //movies[index] = { ...movies[index] };
     movies[index].liked = !movies[index].liked;
     this.setState({ movies: movies });
   };
 
+  handleChangePage = (page) => {
+    this.setState({ currentPage: page });
+  };
+
+  handleGenreSelect = (genre) => {
+    console.log("genre", genre);
+  };
+
   render() {
     const count = this.state.movies.length;
+    const { pageSize, currentPage, movies: allMovies } = this.state;
 
     if (count === 0) {
       return (
@@ -74,60 +94,76 @@ class Movies extends Component {
         </div>
       );
     }
+    const movies = paginate(allMovies, currentPage, pageSize);
 
     return (
-      <React.Fragment>
-        <br />
-        <div className="d-flex justify-content-between w-75 bg-warning p-2 rounded">
-          <h3 className="text-dark ">There are {count} movies</h3>
-          <button onClick={this.addMovie} className="btn btn-success ">
-            Add Movie
-          </button>
+      <div className="row">
+        <div className="col-3">
+          <ListGroup
+            items={this.state.genres}
+            onItemSelect={this.handleGenreSelect}
+          />
         </div>
+        <div className="col">
+          <br />
+          <div className="d-flex justify-content-between w-75 bg-warning p-2 rounded">
+            <h3 className="text-dark ">There are {count} movies</h3>
+            <button onClick={this.addMovie} className="btn btn-success ">
+              Add Movie
+            </button>
+          </div>
 
-        <br />
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Genre</th>
-              <th>Stock</th>
-              <th>Rate</th>
-              <th></th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.movies.map((movie) => (
-              <tr key={movie._id}>
-                <td>{movie.title}</td>
-                <td>{movie.genre.name}</td>
-                <td>{movie.numberInStock}</td>
-                <td>{movie.dailyRentalRate}</td>
-                <td>
-                  <Like
-                    onClick={() => {
-                      this.handleLike(movie);
-                    }}
-                    liked={movie.liked}
-                  ></Like>
-                </td>
-                <td>
-                  <button
-                    onClick={() => this.handleDelete(movie)}
-                    className="btn btn-danger"
-                  >
-                    Delete
-                  </button>
-                </td>
+          <br />
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Genre</th>
+                <th>Stock</th>
+                <th>Rate</th>
+                <th></th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        <PopUp></PopUp>
-      </React.Fragment>
+            </thead>
+            <tbody>
+              {movies.map((movie) => (
+                <tr key={movie._id}>
+                  <td>{movie.title}</td>
+                  <td>{movie.genre.name}</td>
+                  <td>{movie.numberInStock}</td>
+                  <td>{movie.dailyRentalRate}</td>
+                  <td>
+                    <Like
+                      onClick={() => {
+                        this.handleLike(movie);
+                      }}
+                      liked={movie.liked}
+                    ></Like>
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => this.handleDelete(movie)}
+                      className="btn btn-danger"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <PopUp />
+          <Pagination
+            itemCount={count}
+            pageSize={pageSize}
+            currentPage={currentPage}
+            onPageChange={this.handleChangePage}
+          />
+        </div>
+      </div>
     );
   }
 }
+
 
 export default Movies;
