@@ -12,6 +12,10 @@ code {
     monospace;
 }
 
+.clickable{
+  cursor: pointer;
+}
+
 
 .list__item:hover{
   background: rgb(96, 164, 233);
