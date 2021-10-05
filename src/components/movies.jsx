@@ -44,7 +44,7 @@ class Movies extends Component {
   };
   render() {
     const { pageSize, currentPage, sortColumn } = this.state;
-    
+
     const count = this.state.movies.length;
     if (count === 0) {
       return (
